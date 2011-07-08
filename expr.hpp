@@ -41,7 +41,7 @@ namespace latl {
     template <class E>
     struct VectorExpr {
         E& instance() { return static_cast<E&>(*this); }
-        const E& instance() const { return static_cast<const E&>(*this); }
+        const E& instance() const { return static_cast<const E&>(*this); }        
     };
 
     template <class E>
@@ -60,6 +60,61 @@ namespace latl {
             fill(m, 0);
         }
     };
+
+    struct Identity : public MatrixExpr<Identity> {
+        template <class M>
+        void operator()(AbstractMatrix<M>& m) const {
+            assert_square(m);
+            fill(m, 0);
+            for (int i=0; i<m.rows(); ++i)
+                m(i,i) = 1;
+        }
+    };
+
+    template <int N, class S, class Prev>
+    struct VectorCreator : public VectorExpr<VectorCreator<N,S,Prev> >
+    {
+        S s;
+        const Prev& prev;
+
+        VectorCreator(S s_, const Prev& prev_) : s(s_), prev(prev_) {}
+        int size() const { return N; }
+        template <class V>
+        void operator()(AbstractVector<V>& v) const {
+            CheckEquality<N,vector_traits<V>::static_size>::eval(N, v.size());
+            dump(v);
+        }
+
+        template <class V>
+        void dump(AbstractVector<V>& v) const {
+            v[N-1] = s;
+            prev.dump(v);
+        }
+    };
+
+    template <>
+    struct VectorCreator<0,int,int> : public VectorExpr<VectorCreator<0,int,int> > {
+        int size() const { return 0; }
+        
+        template <class V>
+        void operator()(AbstractVector<V>& v) const {
+            CheckEquality<0,vector_traits<V>::static_size>::eval(0, v.size());
+        }
+
+        template <class V>
+        void dump(AbstractVector<V>& v) const {}
+    };
+
+    template <int N, class T, class S, class Prev>
+    VectorCreator<N+1,T,VectorCreator<N,S,Prev> > operator,(const VectorCreator<N,S,Prev>& vc, T t)
+    {
+        return VectorCreator<N+1,T,VectorCreator<N,S,Prev> >(t, vc);
+    }
+
+
+    inline
+    VectorCreator<0,int,int> vec() { return VectorCreator<0,int,int>(); }
+    
 }
 
 #endif
