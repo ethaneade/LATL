@@ -35,17 +35,43 @@
 #define LATL_VECTOR_HPP
 
 #include <latl/debug.hpp>
-#include <latl/decl.hpp>
+#include <latl/util.hpp>
+#include <latl/vector_traits.hpp>
 
 namespace latl
 {
 
+    template <bool DynN1, bool DynN2>
+    struct AssertSameSize {
+        template <class A, class B>
+        static void eval(const A& a, const B& b) {
+            assert(a.size() == b.size());
+        }
+    };
+
+    template <>
+    struct AssertSameSize<false,false> {
+        template <class A, class B>
+        static void eval(const A& a, const B& b) {
+            Assert<((int)vector_traits<A>::static_size ==
+                    (int)vector_traits<B>::static_size)>();
+        }
+    };
+
+    template <class A, class B>
+    void assert_same_size(const A& a, const B& b) {
+        AssertSameSize<vector_traits<A>::static_size == -1,
+            vector_traits<B>::static_size == -1>::eval(a,b);
+    }
+    
+    
     //
     // AbstractVector definition
     //
     
     template <class V>
-    struct AbstractVector {
+    class AbstractVector {
+    public:
 	V& instance() { return static_cast<V&>(*this); }
 	const V& instance() const { return static_cast<const V&>(*this); }
 
@@ -74,16 +100,38 @@ namespace latl
         template <class W>
         void assign(const AbstractVector<W>& other)
         {
-            assert(size() == other.size());
+            assert_same_size(instance(), other.instance());
             unchecked_assign(other);
         }
 
+        template <class W>
+        V& operator=(const AbstractVector<W>& w) {
+            assign(w);
+            return instance();
+        }
+
+        template <class W>
+        void swap(AbstractVector<W>& w) {
+            assert_same_size(instance(), w.instance());
+            for (int i=0; i<size(); ++i) {
+                scalar_t tmp = w[i];
+                w[i] = (*this)[i];
+                (*this)[i] = tmp;
+            } 
+        }
+
+        template <class W> V& operator+=(const AbstractVector<W>& w);
+        template <class W> V& operator-=(const AbstractVector<W>& w);
+        template <class S> V& operator*=(S s);
+        template <class S> V& operator/=(S s);
+        
+    private:
         template <class W>
         void unchecked_assign(const AbstractVector<W>& other)
         {
             for (int i=0; i<size(); ++i)
                 (*this)[i] = other[i];
-        }
+        }        
     };
 
     // 
@@ -105,19 +153,9 @@ namespace latl
     struct FixedVector : public AbstractVector<V>
     {
         int vsize() const { return AbstractVector<V>::static_size; }        
+
+        using AbstractVector<V>::operator=;
         
-        template <class W>
-        V& operator=(const FixedVector<N,W>& other) {
-            unchecked_assign(other);
-            return this->instance();
-        }        
-
-        template <class W>
-        V& operator=(const DynamicVector<W>& other) {
-            assign(other);
-            return this->instance();
-        }
-
         template <class E>
         V& operator=(const VectorExpr<E>& e) {
             e.instance()(*this);
@@ -132,11 +170,6 @@ namespace latl
     template <class V>
     struct DynamicVector : public AbstractVector<V>
     {
-        template <class W>
-        V& operator=(const AbstractVector<W>& other) {
-            assign(other);
-            return this->instance();
-        }
         template <class E>
         V& operator=(const VectorExpr<E>& e) {
             e.instance()(*this);
@@ -144,30 +177,6 @@ namespace latl
         }
     };
 
-    //
-    // Traits for Vector class
-    //
-
-    template <int N, class Scalar>
-    struct vector_traits<Vector<N,Scalar> >
-    {
-        typedef Scalar scalar_t;
-        enum {
-            static_size = N,
-            static_stride = 1,
-        };
-    };
-
-    template <class Scalar>
-    struct vector_traits<Vector<-1,Scalar> >
-    {
-        typedef Scalar scalar_t;
-        enum {
-            static_size = -1,
-            static_stride = 1,
-        };
-    };
-    
     //
     // Standard fixed-size Vector
     //
@@ -211,6 +220,11 @@ namespace latl
         Scalar& at(int i) { return x[i]; }
 
         using FixedVector<N,Vector<N,Scalar> >::operator=;
+
+        Vector& operator=(const Vector& v) {
+            assign(v);
+            return *this;
+        }
     };
 
     //
@@ -236,6 +250,11 @@ namespace latl
             init(n);
             fill(*this, s);
         }
+        
+        Vector(const Vector& v) {
+            init(v.size());
+            assign(v);
+        }
 
         template <int NV, class V>
         Vector(const FixedVector<NV,V>& v) {
@@ -251,7 +270,7 @@ namespace latl
 
         template <class E>
         Vector(const VectorExpr<E>& e) {
-            init(e.size());
+            init(e.instance().size());
             e.instance()(*this);
         }
         
@@ -260,6 +279,12 @@ namespace latl
         }
         
         using DynamicVector<Vector<-1,Scalar> >::operator=;
+
+        Vector& operator=(const Vector& v) {
+            assign(v);
+            return *this;
+        }
+        
 
         int vsize() const { return N; }
         int vstride() const { return 1; }
@@ -282,21 +307,6 @@ namespace latl
 
 
     //
-    // Traits for RefVectors
-    //
-
-    template <int N, int Stride, class Scalar>
-    struct vector_traits<RefVector<N,Stride,Scalar> >
-    {
-        typedef Scalar scalar_t;
-        enum {
-            static_size = N,
-            static_stride = Stride,
-        };
-    };
-
-
-    //
     // RefVector definitions
     //
 
@@ -309,13 +319,18 @@ namespace latl
         Scalar *x;
     public:
         RefVector(Scalar *s) : x(s) {}
-        using FixedVector<N,RefVector<N,Stride,Scalar> >::operator=;
 
         RefVector& operator=(const RefVector& other) {
-            unchecked_assign(other);
+            assign(other);
             return *this;
         }
 
+        template <class W>
+        RefVector& operator=(const AbstractVector<W>& other) {
+            assign(other);
+            return *this;
+        }
+        
         int vstride() const { return Stride; }
         Scalar* vdata() { return x; }
         const Scalar* vdata() const { return x; }
@@ -335,7 +350,11 @@ namespace latl
         int N;
     public:
         RefVector(Scalar *s, int n) : x(s), N(n) {}        
-        using DynamicVector<RefVector<-1,Stride,Scalar> >::operator=;
+        template <class W>
+        RefVector& operator=(const AbstractVector<W>& other) {
+            assign(other);
+            return *this;
+        }
 
         RefVector& operator=(const RefVector& other) {
             assign(other);
@@ -362,10 +381,15 @@ namespace latl
         int Stride;
     public:
         RefVector(Scalar *s, int stride) : x(s), Stride(stride) {}
-        using FixedVector<N,RefVector<N,-1,Scalar> >::operator=;
+        
+        template <class W>        
+        RefVector& operator=(const AbstractVector<W>& other) {
+            assign(other);
+            return *this;
+        }
 
         RefVector& operator=(const RefVector& other) {
-            unchecked_assign(other);
+            assign(other);
             return *this;
         }
 
@@ -388,7 +412,12 @@ namespace latl
         int N, Stride;
     public:
         RefVector(Scalar *s, int n, int stride) : x(s), N(n), Stride(stride) {}
-        using DynamicVector<RefVector<-1,-1,Scalar> >::operator=;
+
+        template <class W>
+        RefVector& operator=(const AbstractVector<W>& other) {
+            assign(other);
+            return *this;
+        }
 
         RefVector& operator=(const RefVector& other) {
             assign(other);
@@ -406,27 +435,90 @@ namespace latl
     };
     
     //
-    // Bounds checking for slices
+    // Bounds checking for slices:
+    // Check as much as possible at compile time
     //
+
+    template <int Start, int Size, int N>
+    struct CheckSliceBounds {
+        static void eval(int, int, int) {
+            Assert<(Start >= 0 && Size >= 0 && Start + Size <= N)>();
+        }
+    };
+
+    template <int Size, int N>
+    struct CheckSliceBounds<-1,Size,N> {
+        static void eval(int Start, int, int) {
+            Assert<(Size >= 0 && Size <= N)>();
+            assert(Start + Size <= N);
+        }
+    };
+
+    template <int Start, int N>
+    struct CheckSliceBounds<Start,-1,N> {
+        static void eval(int, int Size, int) {
+            Assert<(Start >= 0 && Start <= N)>();
+            assert(Start + Size <= N);
+        }
+    };
+
+    template <int N>
+    struct CheckSliceBounds<-1,-1,N> {
+        static void eval(int Start, int Size, int) {
+            assert(Start >= 0 && Size >= 0 && Start + Size <= N);
+        }
+    };
+
+    template <int Start, int Size>
+    struct CheckSliceBounds<Start,Size,-1> {
+        static void eval(int, int, int N) {
+            Assert<(Start >= 0 && Size >= 0)>();
+            assert(Start + Size <= N);
+        }
+    };
+
+    template <int Size>
+    struct CheckSliceBounds<-1,Size,-1> {
+        static void eval(int Start, int, int N) {
+            Assert<(Size >= 0)>();
+            assert(Start >= 0 && Start + Size <= N);
+        }
+    };
+
+    template <int Start>
+    struct CheckSliceBounds<Start,-1,-1> {
+        static void eval(int, int Size, int N) {
+            Assert<(Start >= 0)>();
+            assert(Size >= 0 && Start + Size <= N);
+        }
+    };
     
-    template <int Start, int Size, int N, class V>
-    void check_slice_bounds(const FixedVector<N,V>& v)
-    {
-        Assert<(Start >= 0 && Size >= 0 && Start + Size <= N)>();
-    }
+    template <>
+    struct CheckSliceBounds<-1,-1,-1> {
+        static void eval(int Start, int Size, int N) {
+            assert(Start >= 0 && Size >= 0 && Start + Size <= N);
+        }
+    };
+    
 
     template <int Start, int Size, class V>
-    void check_slice_bounds(const DynamicVector<V>& v)
+    void check_slice_bounds(const AbstractVector<V>& v)
     {
-        assert(Start >= 0 && Size >= 0 && Start + Size <= v.size());
+        CheckSliceBounds<Start,Size,vector_traits<V>::static_size>::eval(Start,Size,v.size());
     }
 
+    template <int Size, class V>
+    void check_slice_bounds(const AbstractVector<V>& v, int Start)
+    {
+        CheckSliceBounds<-1,Size,vector_traits<V>::static_size>::eval(Start,Size,v.size());
+    }
+    
     //
     // slice() definitions
     //
 
     template <int Size, int Stride>
-    struct SliceCreator {
+    struct VSliceCreator {
         template <class V> static
         RefVector<Size,Stride, typename V::scalar_t>
         eval(AbstractVector<V>& v,
@@ -437,7 +529,7 @@ namespace latl
     };
     
     template <int Stride>
-    struct SliceCreator<-1,Stride> {
+    struct VSliceCreator<-1,Stride> {
         template <class V> static
         RefVector<-1,Stride, typename V::scalar_t>
         eval(AbstractVector<V>& v, int Start, int Size, int)
@@ -448,7 +540,7 @@ namespace latl
     };
 
     template <int Size>
-    struct SliceCreator<Size,-1> {
+    struct VSliceCreator<Size,-1> {
         template <class V> static
         RefVector<Size,-1, typename V::scalar_t>
         eval(AbstractVector<V>& v, int Start, int, int Stride)
@@ -459,7 +551,7 @@ namespace latl
     };
 
     template <>
-    struct SliceCreator<-1,-1> {
+    struct VSliceCreator<-1,-1> {
         template <class V> static
         RefVector<-1,-1, typename V::scalar_t>
         eval(AbstractVector<V>& v, int Start, int Size, int Stride)
@@ -475,7 +567,7 @@ namespace latl
     slice(AbstractVector<V>& v)
     {
         check_slice_bounds<Start,Size>(v.instance());
-        return SliceCreator<Size,
+        return VSliceCreator<Size,
             vector_traits<V>::static_stride>::eval(v, Start, Size, v.stride());
     }
 
@@ -484,7 +576,7 @@ namespace latl
     slice(const AbstractVector<V>& v)
     {
         check_slice_bounds<Start,Size>(v.instance());
-        return SliceCreator<Size,
+        return VSliceCreator<Size,
             vector_traits<V>::static_stride>::eval(const_cast<AbstractVector<V>&>(v),
                                                    Start, Size, v.stride());
     }
@@ -494,7 +586,7 @@ namespace latl
     slice(int Start, int Size, AbstractVector<V>& v)
     {
         assert(Start >= 0 && Size >= 0 && Start + Size <= v.size());
-        return SliceCreator<-1,
+        return VSliceCreator<-1,
             vector_traits<V>::static_stride>::eval(v, Start, Size, v.stride());
     }
 
@@ -503,10 +595,43 @@ namespace latl
     slice(int Start, int Size, const AbstractVector<V>& v)
     {
         assert(Start >= 0 && Size >= 0 && Start + Size <= v.size());
-        return SliceCreator<-1,
+        return VSliceCreator<-1,
             vector_traits<V>::static_stride>::eval(const_cast<AbstractVector<V>&>(v),
                                                    Start, Size, v.stride());
     }
+
+    //
+    // Container
+    //
+
+    template <int N, class Scalar>
+    struct VectorHolder {
+        typedef Vector<N,Scalar> type;
+        type value;
+        VectorHolder() {}
+        template <class V>
+        VectorHolder(const AbstractVector<V>& v) : value(v) {}        
+        VectorHolder(int) {}
+        void resize(int) {}
+
+        type& operator()() { return value; }
+        const type& operator()() const { return value; }
+    };
+ 
+    template <class Scalar>
+    struct VectorHolder<-1,Scalar> {
+        typedef Vector<-1,Scalar> type;
+        type value;
+        VectorHolder() {}
+        
+        template <class V>
+        VectorHolder(const AbstractVector<V>& v) : value(v) {}
+        VectorHolder(int N) : value(N) {}
+        void resize(int N) { value.resize(N); }
+
+        type& operator()() { return value; }
+        const type& operator()() const { return value; }
+    };    
 };
 
 #endif
