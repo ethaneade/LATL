@@ -42,7 +42,7 @@
 namespace latl
 {
 #define LATL_VS(V) typename vector_traits<V>::scalar_t
-#define LATL_WIDER_VS(V1,V2) typename Wider<LATL_VS(V1),LATL_VS(V2)>::type
+#define LATL_WIDER_VS(V1,V2) typename Wider< LATL_VS(V1) , LATL_VS(V2) >::type
     
     template <class V1, class V2>
     LATL_WIDER_VS(V1,V2) inner_product(const AbstractVector<V1>& a, const AbstractVector<V2>& b)
@@ -92,6 +92,14 @@ namespace latl
         return ScalarVectorProduct<S,V>(v,s);
     }
 
+    template <class V> template <class S>
+    V& AbstractVector<V>::operator*=(S s) {
+        for (int i=0; i<size(); ++i)
+            (*this)[i] *= s;
+        return instance();
+    }
+    
+
     //
     // Vector / Scalar 
     //
@@ -128,6 +136,27 @@ namespace latl
     operator/(const AbstractVector<V>& v, S s) {
         return VectorQuotient<V,S>(v,s);
     }    
+
+    template <class W, class V>
+    void divide(AbstractVector<V>& v, typename ScalarType<W>::recip_type s) {
+        W r = 1/s;
+        for (int i=0; i<v.size(); ++i)
+            v[i] *= r;
+    }
+
+    template <class W, class V>
+    void divide(AbstractVector<V>& v, typename ScalarType<W>::nonrecip_type s) {
+        for (int i=0; i<v.size(); ++i)
+            v[i] /= s;
+    }
+    
+    template <class V> template <class S>
+    V& AbstractVector<V>::operator/=(S s) {
+        typedef typename Wider<LATL_VS(V),S>::type W;
+        divide<W>(*this, s);
+        return instance();
+    }
+
     
     
     //
@@ -178,8 +207,13 @@ namespace latl
                 w[i] = a[i] + b[i];
         }
 
-        typedef Vector<MaxInt<vector_traits<V1>::static_size, vector_traits<V2>::static_size>::value,
-                       LATL_WIDER_VS(V1,V2)> result_t;
+        enum {
+            N1 = vector_traits<V1>::static_size,
+            N2 = vector_traits<V2>::static_size,
+            N = MaxInt<N1,N2>::value,
+        };
+
+        typedef Vector<N,LATL_WIDER_VS(V1,V2)> result_t;
     };
     
     template <class V1, class V2>
@@ -188,6 +222,14 @@ namespace latl
         return VectorSum<V1,V2>(a,b);
     }
 
+    template <class V1> template <class V2>
+    V1& AbstractVector<V1>::operator+=(const AbstractVector<V2>& v) {
+        assert_same_size(*this, v);
+        for (int i=0; i<size(); ++i)
+            (*this)[i] += v[i];
+        return instance();
+    }
+    
     //
     // Vector difference
     //
@@ -211,8 +253,13 @@ namespace latl
                 w[i] = a[i] - b[i];
         }
 
-        typedef Vector<MaxInt<vector_traits<V1>::static_size, vector_traits<V2>::static_size>::value,
-                       LATL_WIDER_VS(V1,V2)> result_t;
+        enum {
+            N1 = vector_traits<V1>::static_size,
+            N2 = vector_traits<V2>::static_size,
+            N = MaxInt<N1,N2>::value,
+        };
+
+        typedef Vector<N,LATL_WIDER_VS(V1,V2)> result_t;
     };
     
     template <class V1, class V2>
@@ -221,6 +268,108 @@ namespace latl
         return VectorDiff<V1,V2>(a,b);
     }
 
+    template <class V1> template <class V2>
+    V1& AbstractVector<V1>::operator-=(const AbstractVector<V2>& v) {
+        assert_same_size(*this, v);
+        for (int i=0; i<size(); ++i)
+            (*this)[i] -= v[i];
+        return instance();
+    }
+
+    //
+    // Cross Product
+    //    
+    
+    template <class V1, class V2>
+    Vector<3,LATL_WIDER_VS(V1,V2)>
+    operator^(const AbstractVector<V1>& a, const AbstractVector<V2>& b) {
+        CheckEquality<3,vector_traits<V1>::static_size>::eval(3,a.size());
+        CheckEquality<3,vector_traits<V2>::static_size>::eval(3,b.size());
+        Vector<3,LATL_WIDER_VS(V1,V2)> w;
+        w[0] = a[1]*b[2] - a[2]*b[1];
+        w[1] = a[2]*b[0] - a[0]*b[2];
+        w[2] = a[0]*b[1] - a[1]*b[0];
+        return w;
+    }
+
+    //
+    // Vector concatenation
+    //
+
+    template <class V1, class V2>
+    struct VectorConcat : public VectorExpr<VectorConcat<V1,V2> > {
+        const AbstractVector<V1>& a;
+        const AbstractVector<V2>& b;
+        enum {
+            N1 = vector_traits<V1>::static_size,
+            N2 = vector_traits<V2>::static_size,
+            N = (N1 == -1 || N2 == -1) ? -1 : (N1+N2)
+        };
+        int size() const { return a.size() + b.size(); }
+        VectorConcat(const AbstractVector<V1>& a_,
+                   const AbstractVector<V2>& b_)
+            : a(a_), b(b_)
+        {
+        }
+
+        template <class W>
+        void operator()(AbstractVector<W>& w) const {
+            CheckEquality<vector_traits<W>::static_size, N>::eval(w.size(), size());
+
+            for (int i=0; i<a.size(); ++i)
+                w[i] = a[i];
+            for (int i=0; i<b.size(); ++i)
+                w[i + a.size()] = b[i];
+        }
+
+        typedef Vector<N, LATL_WIDER_VS(V1,V2)> result_t;
+    };
+    
+    template <class V1, class V2>
+    typename VectorConcat<V1,V2>::result_t
+    operator,(const AbstractVector<V1>& a, const AbstractVector<V2>& b) {
+        return VectorConcat<V1,V2>(a,b);
+    }
+
+
+    //
+    // Vector element-wise multiplication
+    //
+     
+    template <class V1, class V2>
+    struct VectorDiagMult : public VectorExpr<VectorDiagMult<V1,V2> > {
+        const AbstractVector<V1>& a;
+        const AbstractVector<V2>& b;
+        int size() const { return a.size(); }
+        VectorDiagMult(const AbstractVector<V1>& a_,
+                       const AbstractVector<V2>& b_)
+            : a(a_), b(b_)
+        {
+            assert_same_size(a,b);
+        }
+        
+        template <class W>
+        void operator()(AbstractVector<W>& w) const {
+            assert_same_size(w, a);
+            for (int i=0; i<a.size(); ++i)
+                w[i] = a[i] * b[i];
+        }
+
+        enum {
+            N1 = vector_traits<V1>::static_size,
+            N2 = vector_traits<V2>::static_size,
+            N = MaxInt<N1,N2>::value,
+        };
+
+        typedef Vector<N,LATL_WIDER_VS(V1,V2)> result_t;
+    };
+    
+    template <class V1, class V2>
+    typename VectorDiagMult<V1,V2>::result_t
+    diagmult(const AbstractVector<V1>& a, const AbstractVector<V2>& b) {
+        return VectorDiagMult<V1,V2>(a,b);
+    }
+    
 }
 
 #endif
