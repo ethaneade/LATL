@@ -39,6 +39,16 @@
 namespace latl
 {
 
+    template <class V>
+    struct vector_traits<AbstractVector<V> >
+    {
+        typedef typename vector_traits<V>::scalar_t scalar_t;
+        enum {
+            static_size = vector_traits<V>::static_size,
+            static_stride = vector_traits<V>::static_stride,
+        };
+    };
+    
     template <int N, class Scalar>
     struct vector_traits<Vector<N,Scalar> >
     {
