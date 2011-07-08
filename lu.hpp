@@ -60,7 +60,7 @@ namespace latl
             assert_square(m);
             int n = m.rows();
             lu.resize(n, n);
-            lu = m;
+            lu() = m;
             
             inv_diag.resize(n);
             index.resize(n);
