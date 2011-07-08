@@ -131,6 +131,8 @@ namespace latl
         }
 
         int rank() const { return r; }
+
+        bool is_full_rank() const { return r == index().size(); }
         
         Scalar determinant() const {
             Scalar det = lu()(0,0);
