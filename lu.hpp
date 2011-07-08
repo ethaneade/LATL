@@ -41,7 +41,7 @@ namespace latl
     template <int N, class Scalar>
     class LU
     {
-    private:
+    public:
         MatrixHolder<N,N,Scalar> lu;
         VectorHolder<N,Scalar> inv_diag;
         VectorHolder<N,int> index;
@@ -82,17 +82,13 @@ namespace latl
                 }
 
                 if (argmax != row) {
-                    for (int j=i; j<n; ++j) {
-                        Scalar tmp = lu.value(row,j);
-                        lu.value(row,j) = lu.value(argmax,j);
-                        lu.value(argmax,j) = tmp;
-                    }
+                    lu()[row].swap(lu()[argmax].instance());
+
                     int tmp = index()[i];
                     index()[i] = index()[argmax];
                     index()[argmax] = tmp;
                     ++swaps;
                 }
-                
                 
                 if (maxval < Constants<Scalar>::epsilon()) {
                     inv_diag()[i] = 0;
