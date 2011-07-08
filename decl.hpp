@@ -83,7 +83,7 @@ namespace latl {
     template <class Mat>
     struct DynamicMatrix;
 
-    template <int M=-1, int N=-1, class Scalar=double>
+    template <int M=-1, int N=M, class Scalar=double>
     class Matrix;
 
     template <class Mat>
