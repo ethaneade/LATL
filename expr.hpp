@@ -35,6 +35,7 @@
 #define LATL_EXPR_HPP
 
 #include <latl/matrix.hpp>
+#include <cstdlib>
 
 namespace latl {
 
@@ -61,6 +62,23 @@ namespace latl {
         }
     };
 
+    
+    struct Random : public VectorExpr<Random>, public MatrixExpr<Random> {
+        double scale;
+        Random(double s = 1) : scale(s) {}
+        template <class V>
+        void operator()(AbstractVector<V>& v) const {
+            for (int i=0; i<v.size(); ++i)
+                v[i] = rand() * scale / RAND_MAX;
+        }
+        template <class M>
+        void operator()(AbstractMatrix<M>& m) const {
+            for (int i=0; i<m.rows(); ++i)
+                for (int j=0; j<m.cols(); ++j)
+                    m(i,j) = rand() * scale / RAND_MAX;
+        }
+    };
+    
     struct Identity : public MatrixExpr<Identity> {
         template <class M>
         void operator()(AbstractMatrix<M>& m) const {
@@ -70,7 +88,7 @@ namespace latl {
                 m(i,i) = 1;
         }
     };
-
+    
     template <int N, class S, class Prev>
     struct VectorCreator : public VectorExpr<VectorCreator<N,S,Prev> >
     {
