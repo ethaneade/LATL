@@ -45,7 +45,8 @@ namespace latl
         MatrixHolder<N,N,Scalar> lu;
         VectorHolder<N,Scalar> inv_diag;
         VectorHolder<N,int> index;
-        int rank;
+        int r;
+        int swaps;
         
     public:
         LU() {}
@@ -57,18 +58,90 @@ namespace latl
         template <class Mat>
         void compute(const AbstractMatrix<Mat>& m) {
             assert_square(m);
-            const int n = m.rows();
+            int n = m.rows();
             lu.resize(n, n);
-            assert_same_shape(m, lu());
+            lu = m;
             
             inv_diag.resize(n);
             index.resize(n);
+            int row = 0;
+            swaps = 0;
+
+            for (int i=0; i<n; ++i)
+                index()[i] = i;
 
             for (int i=0; i<n; ++i) {
+                int argmax = row;
+                Scalar maxval = latl::abs(lu.value(row,i));
+                for (int j=row+1; j<n; ++j) {
+                    Scalar ji = lu.value(j,i);
+                    if (ji > maxval) {
+                        maxval = ji;
+                        argmax = j;
+                    }
+                }
+
+                if (argmax != row) {
+                    for (int j=i; j<n; ++j) {
+                        Scalar tmp = lu.value(row,j);
+                        lu.value(row,j) = lu.value(argmax,j);
+                        lu.value(argmax,j) = tmp;
+                    }
+                    int tmp = index()[i];
+                    index()[i] = index()[argmax];
+                    index()[argmax] = tmp;
+                    ++swaps;
+                }
                 
+                
+                if (maxval < Constants<Scalar>::epsilon()) {
+                    inv_diag()[i] = 0;
+                    continue;
+                }
+                
+                Scalar inv_ii = 1 / lu.value(row,i);
+                inv_diag()[i] = inv_ii;
+                
+                for (int j=row+1; j<n; ++j) {
+                    Scalar factor = lu.value(j,i) * inv_ii;
+                    for (int k=i+1; k<n; ++k)
+                        lu.value(j,k) -= factor * lu.value(row,k); 
+                    lu.value(j,i) = factor;
+                }
+                ++row;                                               
             }
+            r = row;
         }
 
+        template <class V>
+        typename VectorHolder<N,Scalar>::type
+        inverse_times(const AbstractVector<V>& v) const {
+            assert_same_size(index(), v);
+            const int n = index().size();
+            VectorHolder<N,Scalar> y(n);
+            for (int i=0; i<n; ++i) {
+                Scalar yi = v[index()[i]];
+                for (int j=0; j<i; ++j)
+                    yi -= lu.value(i, j) * y()[j];                    
+                y()[i] = yi;
+            }
+            for (int i=n-1; i>=0; --i) {
+                Scalar yi = y()[i];
+                for (int j=i+1; j<n; ++j)
+                    yi -= lu.value(i,j) * y()[j];
+                y()[i] = inv_diag()[i] * yi;
+            }
+            return y.value;
+        }
+
+        int rank() const { return r; }
+        
+        Scalar determinant() const {
+            Scalar det = lu()(0,0);
+            for (int i=1; i<index().size(); ++i)
+                det *= lu()(i,i);
+            return ((swaps%2) ? -det : det);
+        }
     };
 }
 
