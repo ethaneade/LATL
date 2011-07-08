@@ -48,11 +48,6 @@
 
 namespace latl {
 
-    template <bool Cond>
-    struct Assert;
-
-    template <>
-    struct Assert<true> {};
 }
 
 #endif
