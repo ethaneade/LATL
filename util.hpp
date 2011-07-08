@@ -44,6 +44,20 @@ namespace latl {
 
     template <class T> struct Constify { typedef const T type; };
     template <class T> struct Constify<T&> { typedef T const & type; };
+
+    template <int A, int B>
+    struct MaxInt { enum { value = A > B ? A : B };};
+
+    template <int A, int B, bool DynA = (A==-1), bool DynB = (B==-1)>
+    struct CheckEquality {
+        static void eval(int a, int b) { assert(a == b); }
+    };
+
+    template <int A, int B>
+    struct CheckEquality<A,B,false,false> {
+        static void eval(int, int) { Assert<A==B>(); }
+    };
+
 }
 
 #endif
