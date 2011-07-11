@@ -47,7 +47,9 @@ namespace latl
         bool full_rank;
 
     public:
-        LDLT() {}
+        LDLT() {
+            full_rank = false;
+        }
         
         template <class Mat>
         LDLT(const AbstractMatrix<Mat>& m) { compute(m); }
@@ -114,6 +116,24 @@ namespace latl
             for (int i=1; i<L().rows(); ++i)
                 det *= L()(i,i);
             return det;
+        }
+
+        template <class Mat>
+        void get_Cholesky(AbstractMatrix<Mat>& chol_L)
+        {
+            assert(is_full_rank());
+            assert_same_shape(L(), chol_L);
+            
+            const int n = L().rows();
+            for (int j=0; j<n; ++j) {
+                assert(L()(j,j) >= 0);
+                Scalar sd = latl::sqrt(L()(j,j));
+                chol_L(j,j) = sd;
+                for (int i=j+1; i<n; ++i) {
+                    chol_L(i,j) = sd * L()(i,j);
+                    chol_L(j,i) = 0;
+                }
+            }
         }
     };
 }
