@@ -74,7 +74,7 @@ namespace latl
                 int argmax = row;
                 Scalar maxval = latl::abs(lu.value(row,i));
                 for (int j=row+1; j<n; ++j) {
-                    Scalar ji = lu.value(j,i);
+                    Scalar ji = latl::abs(lu.value(j,i));
                     if (ji > maxval) {
                         maxval = ji;
                         argmax = j;
