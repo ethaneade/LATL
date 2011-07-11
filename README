@@ -1,0 +1,7 @@
+Copyright 2011 Ethan Eade
+
+Work in progress:
+Linear Algebra Template Library for C++, designed especially for
+computation in low-dimensional vector spaces.
+
+The focus is on runtime efficiency in space and time.
