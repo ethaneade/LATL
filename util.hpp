@@ -57,7 +57,30 @@ namespace latl {
     struct CheckEquality<A,B,false,false> {
         static void eval(int, int) { Assert<A==B>(); }
     };
+    
+    namespace ops {
 
+        struct Assign {
+            template <class LHS, class RHS>
+            void operator()(LHS& lhs, const RHS& rhs) const { lhs = rhs; }
+        };
+        
+        struct Add {
+            template <class LHS, class RHS>
+            void operator()(LHS& lhs, const RHS& rhs) const { lhs += rhs; }
+        };
+
+        struct Subtract {
+            template <class LHS, class RHS>
+            void operator()(LHS& lhs, const RHS& rhs) const { lhs -= rhs; }
+        };
+        
+        struct Multiply {
+            template <class LHS, class RHS>
+            void operator()(LHS& lhs, const RHS& rhs) const { lhs *= rhs; }
+        };
+    }
+    
 }
 
 #endif
