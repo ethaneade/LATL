@@ -99,7 +99,7 @@ namespace latl {
         int size() const { return N; }
         template <class V>
         void operator()(AbstractVector<V>& v) const {
-            CheckEquality<N,vector_traits<V>::static_size>::eval(N, v.size());
+            assert_size_is<N>(v);
             dump(v);
         }
 
@@ -116,7 +116,7 @@ namespace latl {
         
         template <class V>
         void operator()(AbstractVector<V>& v) const {
-            CheckEquality<0,vector_traits<V>::static_size>::eval(0, v.size());
+            assert_size_is<0>(v);
         }
 
         template <class V>

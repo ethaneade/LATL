@@ -283,8 +283,8 @@ namespace latl
     template <class V1, class V2>
     Vector<3,LATL_WIDER_VS(V1,V2)>
     operator^(const AbstractVector<V1>& a, const AbstractVector<V2>& b) {
-        CheckEquality<3,vector_traits<V1>::static_size>::eval(3,a.size());
-        CheckEquality<3,vector_traits<V2>::static_size>::eval(3,b.size());
+        assert_size_is<3>(a);
+        assert_size_is<3>(b);
         Vector<3,LATL_WIDER_VS(V1,V2)> w;
         w[0] = a[1]*b[2] - a[2]*b[1];
         w[1] = a[2]*b[0] - a[0]*b[2];

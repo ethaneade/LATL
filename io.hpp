@@ -42,7 +42,7 @@ namespace latl {
     template <class V>
     std::ostream& operator<<(std::ostream& out, const AbstractVector<V>& v)
     {
-        int w = out.precision() + 5;
+        int w = out.precision() + 6;
         for (int i=0; i<v.size(); ++i) {
             out.width(w);
             out << v[i];

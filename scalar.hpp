@@ -93,12 +93,14 @@ namespace latl
     struct Constants<float> {
         static float epsilon() { return 1.192093e-07f; }        
         static float sqrt_epsilon() { return 3.452670e-04f; }
+        static int digits() { return 7; }
     };
 
     template <>
     struct Constants<double> {
         static double epsilon() { return 2.220446e-16; }
         static double sqrt_epsilon() { return 1.490116e-08; }
+        static int digits() { return 16; }
     };
     
     template <>
@@ -107,6 +109,7 @@ namespace latl
         static float sqrt(float s) { return sqrtf(s); }
         static float sin(float s) { return sinf(s); }
         static float cos(float s) { return cosf(s); }
+        static float acos(float s) { return acosf(s); }
         static float tan(float s) { return tanf(s); }
         static float atan(float s) { return atanf(s); }
         static float atan2(float y, float x) { return atan2f(y,x); }
@@ -118,6 +121,7 @@ namespace latl
         static double sqrt(double s) { return ::sqrt(s); }
         static double sin(double s) { return ::sin(s); }
         static double cos(double s) { return ::cos(s); }
+        static double acos(double s) { return ::acos(s); }
         static double tan(double s) { return ::tan(s); }
         static double atan(double s) { return ::atan(s); }
         static double atan2(double y, double x) { return ::atan2(y,x); }
@@ -136,6 +140,9 @@ namespace latl
     cos(T x) { return ScalarFuncs<T>::cos(x); }
 
     template <class T> typename ScalarType<T>::type
+    acos(T x) { return ScalarFuncs<T>::acos(x); }
+    
+    template <class T> typename ScalarType<T>::type
     tan(T x) { return ScalarFuncs<T>::tan(x); }
 
     template <class T> typename ScalarType<T>::type
@@ -146,6 +153,16 @@ namespace latl
 
     template <class T> typename ScalarType<T>::type
     sq(T x) { return x*x; }
+
+    template <class T> typename ScalarType<T>::type
+    sinc(T x) {
+        T xx = sq(x);
+        T x4 = sq(xx);
+        if (x4 < Constants<T>::epsilon())
+            return 1 - xx*T(1.0/6) * (1 + xx*T(0.05));
+        else
+            return latl::sin(x) / x;
+    }
 }
 
 #endif

@@ -31,36 +31,49 @@
 // interpreted as representing official policies, either expressed or
 // implied, of Ethan Eade.
 
-#ifndef LATL_VECTOR_FUNCS_HPP
-#define LATL_VECTOR_FUNCS_HPP
+#ifndef LATL_MATRIX_FUNCS_HPP
+#define LATL_MATRIX_FUNCS_HPP
 
-#include <latl/vector.hpp>
+#include <latl/matrix.hpp>
 #include <latl/scalar.hpp>
 
 namespace latl
 {
-    template <class V>
-    LATL_VS(V) norm_sq(const AbstractVector<V>& v) { return v*v; }
 
-    template <class V>
-    typename Wider<float,LATL_VS(V)>::type
-    norm(const AbstractVector<V>& v)
+    template <class Mat>
+    LATL_MS(Mat) trace(const AbstractMatrix<Mat>& m)
     {
-        return latl::sqrt(norm_sq(v));
+        assert_square(m);
+        LATL_MS(Mat) sum = 0;
+        for (int i=0; i<m.rows(); ++i)
+            sum += m(i,i);
+        return sum;
     }
     
-    template <class V>
-    Vector<vector_traits<V>::static_size, LATL_VS(V)>
-    unit(const AbstractVector<V>& v)
-    {
-        return v / norm(v);
+    
+    template <class Mat>
+    void orthonormalize(const AbstractMatrix<Mat>& m) {
+        for (int i=0; i<m.rows(); ++i) {
+            normalize(m[i].instance());
+            for (int j=i+1; j<m.rows(); ++j)
+                m[j] -= (m[j] * m[i]) * m[i];
+        }
     }
 
     template <class V>
-    void normalize(AbstractVector<V>& v) {
-        v /= norm(v);
+    Matrix<3,3,LATL_VS(V)> skew_matrix(const AbstractVector<V>& w)
+    {
+        assert_size_is<3>(w);
+        Matrix<3,3,LATL_VS(V)> s;
+        s(0,0) = s(1,1) = s(2,2) = 0;
+        s(0,1) = -w[2];
+        s(0,2) = w[1];
+        s(1,0) = w[2];
+        s(1,2) = -w[0];
+        s(2,0) = -w[1];
+        s(2,1) = w[0];
+        return s;
     }
-    
     
 }
 

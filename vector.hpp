@@ -63,7 +63,12 @@ namespace latl
         AssertSameSize<vector_traits<A>::static_size == -1,
             vector_traits<B>::static_size == -1>::eval(a,b);
     }
-    
+
+    template <int N, class V>
+    void assert_size_is(const AbstractVector<V>& v) {
+        CheckEquality<N,vector_traits<V>::static_size>::eval(N,v.size());
+    }
+
     
     //
     // AbstractVector definition
@@ -197,21 +202,20 @@ namespace latl
             fill(*this, s);
         }
 
-        template <class V>
-        Vector(const FixedVector<N,V>& v) {
-            *this = v;
+        Vector(const Vector& v) {
+            assign(v);
         }
-
+        
         template <class V>
-        Vector(const DynamicVector<V>& v) {
-            *this = v;
+        Vector(const AbstractVector<V>& v) {
+            assign(v);
         }
 
         template <class E>
         Vector(const VectorExpr<E>& e) {
             e.instance()(*this);
         }
-
+        
         int vstride() const { return 1; }
         Scalar* vdata() { return x; }
         const Scalar* vdata() const { return x; }
@@ -219,9 +223,13 @@ namespace latl
         Scalar at(int i) const { return x[i]; }
         Scalar& at(int i) { return x[i]; }
 
-        using FixedVector<N,Vector<N,Scalar> >::operator=;
-
         Vector& operator=(const Vector& v) {
+            assign(v);
+            return *this;
+        }
+
+        template <class V>
+        Vector& operator=(const AbstractVector<V>& v) {
             assign(v);
             return *this;
         }

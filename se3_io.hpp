@@ -31,37 +31,31 @@
 // interpreted as representing official policies, either expressed or
 // implied, of Ethan Eade.
 
-#ifndef LATL_VECTOR_FUNCS_HPP
-#define LATL_VECTOR_FUNCS_HPP
+#ifndef LATL_SE3_IO_HPP
+#define LATL_SE3_IO_HPP
 
-#include <latl/vector.hpp>
-#include <latl/scalar.hpp>
+#include <latl/se3.hpp>
+#include <latl/io.hpp>
 
 namespace latl
 {
-    template <class V>
-    LATL_VS(V) norm_sq(const AbstractVector<V>& v) { return v*v; }
-
-    template <class V>
-    typename Wider<float,LATL_VS(V)>::type
-    norm(const AbstractVector<V>& v)
+    template <class Scalar>
+    std::ostream& operator<<(std::ostream& out, const SE3<Scalar>& se3)
     {
-        return latl::sqrt(norm_sq(v));
-    }
-    
-    template <class V>
-    Vector<vector_traits<V>::static_size, LATL_VS(V)>
-    unit(const AbstractVector<V>& v)
-    {
-        return v / norm(v);
+        for (int i=0; i<3; ++i)
+            out << se3.rotation().matrix()[i]
+                << Vector<1,Scalar>(se3.translation()[i]) << std::endl;
+        return out;
     }
 
-    template <class V>
-    void normalize(AbstractVector<V>& v) {
-        v /= norm(v);
-    }
-    
-    
+    template <class Scalar>
+    std::istream& operator>>(std::istream& in, SE3<Scalar>& se3)
+    {
+        Matrix<3,4,Scalar> Rt;
+        if (in >> Rt)
+            se3 = SE3<Scalar>(Rt.T()[3], SO3<Scalar>::from_matrix(slice<0,0,3,3>(Rt)));
+        return in;
+    }    
 }
 
 #endif

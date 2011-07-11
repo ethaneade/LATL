@@ -41,5 +41,6 @@
 #include <latl/vector_ops.hpp>
 #include <latl/matrix_ops.hpp>
 #include <latl/vector_funcs.hpp>
+#include <latl/matrix_funcs.hpp>
 
 #endif
