@@ -74,6 +74,34 @@ namespace latl
         s(2,1) = w[0];
         return s;
     }
+
+    template <class V, class Mat, class Op>
+    void outer_product_upper(const AbstractVector<V>& v, const Op& op, AbstractMatrix<Mat>& m)
+    {
+        assert_same_size(v, m[0]);
+        assert_same_size(v, m.T()[0]);
+        typedef LATL_VS(V) Scalar;
+        const int n = v.size();
+        for (int i=0; i<n; ++i) {
+            Scalar vi = v[i];
+            for (int j=i; j<n; ++j)
+                op(m(i,j), vi*v[j]);
+        }
+    }
+
+    template <class V, class Mat, class Op>
+    void outer_product_upper(const AbstractVector<V>& v, LATL_VS(V) s, const Op& op, AbstractMatrix<Mat>& m)
+    {
+        assert_same_size(v, m[0]);
+        assert_same_size(v, m.T()[0]);
+        typedef LATL_VS(V) Scalar;
+        const int n = v.size();
+        for (int i=0; i<n; ++i) {
+            Scalar svi = s*v[i];
+            for (int j=i; j<n; ++j)
+                op(m(i,j), svi*v[j]);
+        }
+    }
     
 }
 
