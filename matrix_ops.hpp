@@ -45,6 +45,8 @@ namespace latl
 #define LATL_MS(M) typename matrix_traits<M>::scalar_t
 #define LATL_WIDER(A,B) typename Wider<A,B>::type
 #define LATL_WIDER_MS(M1,M2) typename Wider<LATL_MS(M1),LATL_MS(M2)>::type
+#define LATL_SROWS(M) matrix_traits<M>::static_rows
+#define LATL_SCOLS(M) matrix_traits<M>::static_cols
     
     // Scalar * Matrix
     
@@ -290,6 +292,18 @@ namespace latl
     // Matrix * Vector
     //
 
+    template <class A, class B, class C, class Op>
+    void matrix_vector_multiply(const AbstractMatrix<A>& a, const AbstractVector<B>& b,
+                                const Op& op,
+                                AbstractVector<C>& c)
+    {
+        CheckEquality<LATL_SCOLS(A), vector_traits<B>::static_size>::eval(a.cols(), b.size());
+        CheckEquality<LATL_SROWS(A), vector_traits<C>::static_size>::eval(a.rows(), c.size());
+        
+        for (int i=0; i<a.rows(); ++i)
+            op(c[i], a[i] * b);
+    }
+    
     template <class Mat, class V>
     struct MatVecProduct  : public VectorExpr<MatVecProduct<Mat,V> > {
         const AbstractMatrix<Mat>& m;
@@ -307,11 +321,7 @@ namespace latl
         
         template <class W>
         void operator()(AbstractVector<W>& w) const {
-            CheckEquality<matrix_traits<Mat>::static_rows,
-                vector_traits<W>::static_size>::eval(m.rows(), v.size());
-        
-            for (int i=0; i<m.rows(); ++i)
-                w[i] = m[i] * v;
+            matrix_vector_multiply(m, v, ops::Assign(), w);
         }
 
         typedef Vector<matrix_traits<Mat>::static_rows,
@@ -328,6 +338,21 @@ namespace latl
     //
     // Matrix * Matrix
     //
+
+    template <class A, class B, class C, class Op>
+    void matrix_multiply(const AbstractMatrix<A>& a, const AbstractMatrix<B>& b,
+                         const Op& op,
+                         AbstractMatrix<C>& c)
+    {
+        CheckEquality<LATL_SCOLS(A), LATL_SROWS(B)>::eval(a.cols(), b.rows());
+        CheckEquality<LATL_SROWS(C), LATL_SROWS(A)>::eval(c.rows(), a.rows());
+        CheckEquality<LATL_SCOLS(C), LATL_SCOLS(B)>::eval(c.cols(), b.cols());
+        
+        for (int i=0; i<b.cols(); ++i) {
+            op(c.col(i).instance(), a * b.col(i));
+        }
+        
+    }
 
     template <class M1, class M2>
     struct MatrixProduct  : public MatrixExpr<MatrixProduct<M1,M2> > {
@@ -347,14 +372,7 @@ namespace latl
         
         template <class T>
         void operator()(AbstractMatrix<T>& c) const {
-            CheckEquality<matrix_traits<T>::static_rows,
-                matrix_traits<M1>::static_rows>::eval(c.rows(), a.rows());
-            CheckEquality<matrix_traits<T>::static_cols,
-                matrix_traits<M2>::static_cols>::eval(c.cols(), b.cols());
-        
-            for (int i=0; i<b.cols(); ++i) {
-                c.col(i) = a * b.col(i);
-            }
+            matrix_multiply(a, b, ops::Assign(), c);
         }
 
         typedef typename Wider<typename matrix_traits<M1>::scalar_t,
