@@ -86,8 +86,7 @@ namespace latl
     template <class Mat> template <class S>
     Mat& AbstractMatrix<Mat>::operator*=(S s) {
         for (int i=0; i<rows(); ++i)
-            for (int j=0; j<cols(); ++j)
-                (*this)(i,j) *= s;
+            (*this)[i] *= s;
         return instance();
     }
     
@@ -138,15 +137,13 @@ namespace latl
     void divide(AbstractMatrix<Mat>& m, typename ScalarType<W>::recip_type s) {
         W r = 1/s;
         for (int i=0; i<m.rows(); ++i)
-            for (int j=0; j<m.cols(); ++j)
-                m(i,j) *= r;
+            m[i] *= r;
     }
 
     template <class W, class Mat>
     void divide(AbstractMatrix<Mat>& m, typename ScalarType<W>::nonrecip_type s) {
         for (int i=0; i<m.rows(); ++i)
-            for (int j=0; j<m.cols(); ++j)
-                m(i,j) /= s;
+            m[i] /= s;
     }
     
     template <class Mat> template <class S>
@@ -238,8 +235,7 @@ namespace latl
     M1& AbstractMatrix<M1>::operator+=(const AbstractMatrix<M2>& m) {
         assert_same_shape(*this, m);
         for (int i=0; i<rows(); ++i)
-            for (int j=0; j<cols(); ++j)
-                (*this)(i,j) += m(i,j);
+            (*this)[i] += m[i];
         return instance();
     }
 
@@ -282,8 +278,7 @@ namespace latl
     M1& AbstractMatrix<M1>::operator-=(const AbstractMatrix<M2>& m) {
         assert_same_shape(*this, m);
         for (int i=0; i<rows(); ++i)
-            for (int j=0; j<cols(); ++j)
-                (*this)(i,j) -= m(i,j);
+            (*this)[i] -= m[i];
         return instance();
     }
     
