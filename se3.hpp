@@ -64,6 +64,8 @@ namespace latl
     public:
         SE3() : t(Zeros()) {}
 
+        SE3(const Uninitialized& u) {}
+        
         template <class V, class S>
         SE3(const AbstractVector<V>& t_, const SO3<S>& R_)
             : t(t_), R(R_) {}
@@ -85,7 +87,7 @@ namespace latl
         }
 
         const Vector<3,Scalar> translation() const { return t; }
-        Vector<3,Scalar> translation() { return t; }
+        Vector<3,Scalar>& translation() { return t; }
 
         const SO3<Scalar>& rotation() const { return R; }
         SO3<Scalar>& rotation() { return R; }
@@ -116,10 +118,10 @@ namespace latl
             Scalar theta_sq = norm_sq(w);
             Scalar A,B,C;
             compute_coef(theta_sq, A, B, C);
-            Matrix<3,3,Scalar> wx = skew_matrix(w);
-            Matrix<3,3,Scalar> Q = Identity();
-            Q += B*wx;
-            Q += C*(wx*wx);
+            
+            Matrix<3,3,Scalar> Q;
+            
+            SO3<Scalar>::compute_exp_matrix(w, B, C, Q);
             LU<3,Scalar> luQ(Q);
             Vector<3,Scalar> u = luQ.inverse_times(t);
             return (u, w);
@@ -133,15 +135,13 @@ namespace latl
             Scalar theta_sq = norm_sq(w);
             Scalar A,B,C;
             compute_coef(theta_sq, A, B, C);
-            
-            Matrix<3,3,Scalar> wx = skew_matrix(w);
-            Matrix<3,3,Scalar> R = Identity();
-            R += A*wx;
-            R += B*(wx*wx);
 
+            SE3<Scalar> exp_uw((Uninitialized()));
+            SO3<Scalar>::compute_exp_matrix(w, A, B, exp_uw.R.R);
+            
             Vector<3,Scalar> wxu = w ^ u;
-            Vector<3,Scalar> t = u +  B * wxu + C * (w ^ wxu);
-            return SE3(t,SO3<Scalar>(R));
+            exp_uw.translation() = u +  B * wxu + C * (w ^ wxu);
+            return exp_uw;
         }
 
         template <class V>
@@ -156,9 +156,36 @@ namespace latl
             assert_size_is<6>(v);
             Vector<3,Scalar> RTu = R.T() * slice<0,3>(v);            
             return (R.T() * slice<0,3>(v),
-                    R.T() * (slice<3,3>(v) - t ^ slice<0,3>(v)));                    
+                    R.T() * (slice<3,3>(v) - t ^ slice<0,3>(v)));         
         }
-    };    
+    };
+
+    template <class Scalar, class Mat>
+    void transform_covariance(const SE3<Scalar>& trans,
+                              AbstractMatrix<Mat>& m)
+    {
+        assert_square(m);
+        assert_size_is<6>(m[0]);
+
+        for (int i=0; i<6; ++i)
+            m.T()[i] = trans.adjoint_times(m.T()[i]);
+        for (int i=0; i<6; ++i)
+            m[i] = trans.adjoint_times(m[i]);
+    }
+
+    template <class Scalar, class Mat>
+    void transform_information(const SE3<Scalar>& trans,
+                               AbstractMatrix<Mat>& m)
+    {
+        assert_square(m);
+        assert_size_is<6>(m[0]);
+
+        for (int i=0; i<6; ++i)
+            m.T()[i] = trans.adjoint_T_times(m.T()[i]);
+        for (int i=0; i<6; ++i)
+            m[i] = trans.adjoint_T_times(m[i]);
+    }
+    
 }
 
 #endif
