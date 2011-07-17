@@ -41,6 +41,19 @@ namespace latl
 {
 
     template <class Mat>
+    void transpose(AbstractMatrix<Mat>& m)
+    {
+        assert_square(m);
+        for (int i=0; i<m.rows(); ++i) {
+            for (int j=i+1; j<m.cols(); ++j) {
+                LATL_MS(Mat) tmp = m(i,j);
+                m(i,j) = m(j,i);
+                m(j,i) = tmp;
+            }
+        }
+    }
+    
+    template <class Mat>
     LATL_MS(Mat) trace(const AbstractMatrix<Mat>& m)
     {
         assert_square(m);
