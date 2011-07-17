@@ -43,15 +43,74 @@ namespace latl
 {
 #define LATL_VS(V) typename vector_traits<V>::scalar_t
 #define LATL_WIDER_VS(V1,V2) typename Wider< LATL_VS(V1) , LATL_VS(V2) >::type
+#define LATL_MAX_UNROLL_IP (16)    
+
+    template <int Size, bool Big=(Size>LATL_MAX_UNROLL_IP)>
+    struct FixedInnerProduct {
+        template <class R, class A, class B>
+        static R eval(const AbstractVector<A>& a, const AbstractVector<B>& b, int offset) {
+            return a[offset] * b[offset] + FixedInnerProduct<Size-1>::template eval<R>(a,b, offset+1);
+        }
+    };
+
+    template <int Size>
+    struct FixedInnerProduct<Size,true> {
+        template <class R, class A, class B>
+        static R eval(const AbstractVector<A>& a, const AbstractVector<B>& b, int offset) {
+            const int N = Size / LATL_MAX_UNROLL_IP;
+            const int M = Size % LATL_MAX_UNROLL_IP;
+            R sum = 0;
+            for (int i=0; i<N; ++i) {
+                sum += FixedInnerProduct<LATL_MAX_UNROLL_IP>::template eval<R>(a,b,offset);
+                offset += LATL_MAX_UNROLL_IP;
+            }
+            sum += FixedInnerProduct<M,false>::template eval<R>(a,b,offset);
+            return sum;
+        }
+    };
+    
+    template <> struct FixedInnerProduct<1,false> {
+        template <class R, class A, class B>
+        static R eval(const AbstractVector<A>& a, const AbstractVector<B>& b, int offset) {
+            return a[offset] * b[offset];
+        }
+    };
+
+    template <> struct FixedInnerProduct<0,false> {
+        template <class R, class A, class B>
+        static R eval(const AbstractVector<A>& a, const AbstractVector<B>& b, int offset) {
+            return 0;
+        }
+    };
+
+    template <int Size>
+    struct InnerProduct {
+        template <class R, class A, class B>
+        static R eval(const AbstractVector<A>& a, const AbstractVector<B>& b) {
+            return FixedInnerProduct<Size>::template eval<R>(a, b, 0);
+        }
+    };
+    
+    template <>
+    struct InnerProduct<-1> {
+        template <class R, class A, class B>
+        static R eval(const AbstractVector<A>& a, const AbstractVector<B>& b) {
+            R sum = 0;
+            for (int i=0; i<a.size(); ++i)
+                sum += a[i] * b[i];
+            return sum;
+        }
+    };    
     
     template <class V1, class V2>
     LATL_WIDER_VS(V1,V2) inner_product(const AbstractVector<V1>& a, const AbstractVector<V2>& b)
     {
         assert_same_size(a.instance(), b.instance());
-        LATL_WIDER_VS(V1,V2) sum = 0;
-        for (int i=0; i<a.size(); ++i)
-            sum += a[i] * b[i];
-        return sum;
+        typedef LATL_WIDER_VS(V1,V2) dot_t;
+        const int S1 = vector_traits<V1>::static_size;
+        const int S2 = vector_traits<V2>::static_size;
+        const int Size = MaxInt<S1,S2>::value;
+        return InnerProduct<Size>::template eval<dot_t>(a,b);
     }
 
     template <class V1, class V2>
@@ -279,12 +338,15 @@ namespace latl
     //
     // Cross Product
     //    
+
+    template <class V1, class V2> LATL_WIDER_VS(V1,V2)
+    operator^(const FixedVector<2,V1>& a, const FixedVector<2,V2>& b) {        
+        return a[0]*b[1] - a[1]*b[0];
+    }
     
     template <class V1, class V2>
     Vector<3,LATL_WIDER_VS(V1,V2)>
-    operator^(const AbstractVector<V1>& a, const AbstractVector<V2>& b) {
-        assert_size_is<3>(a);
-        assert_size_is<3>(b);
+    operator^(const FixedVector<3,V1>& a, const FixedVector<3,V2>& b) {
         Vector<3,LATL_WIDER_VS(V1,V2)> w;
         w[0] = a[1]*b[2] - a[2]*b[1];
         w[1] = a[2]*b[0] - a[0]*b[2];
