@@ -60,7 +60,29 @@ namespace latl
     void normalize(AbstractVector<V>& v) {
         v /= norm(v);
     }
-    
+
+
+    template <int N, class V>
+    Vector<N-1,LATL_VS(V)> project(const FixedVector<N,V>& v)
+    {
+        return slice<0,N-1>(v) / v[N-1];
+    }
+
+    template <int N, class V>
+    Vector<N+1,LATL_VS(V)> append(const FixedVector<N,V>& v,
+                                  LATL_VS(V) s)
+    {
+        Vector<N+1,LATL_VS(V)> vs;
+        slice<0,N>(vs) = v;
+        vs[N] = s;
+        return vs;
+    }
+
+    template <int N, class V>
+    Vector<N+1,LATL_VS(V)> unproject(const FixedVector<N,V>& v)
+    {
+        return append(v, (LATL_VS(V))1);
+    }
     
 }
 
