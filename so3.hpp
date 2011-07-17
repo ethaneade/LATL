@@ -35,6 +35,7 @@
 #define LATL_SO3_HPP
 
 #include <latl/latl.hpp>
+#include <latl/uninitialized.hpp>
 
 namespace latl
 {
@@ -47,8 +48,31 @@ namespace latl
         Matrix<3,3,Scalar> R;
         explicit SO3(const Matrix<3,3,Scalar>& R_) : R(R_) {}
         friend class SE3<Scalar>;
-    public:
+
+        template <class V>
+        static void compute_exp_matrix(const AbstractVector<V>& w,
+                                       Scalar A, Scalar B,
+                                       Matrix<3,3,Scalar>& m)
+        {
+            Scalar ww = norm_sq(w);
+            m(0,0) = 1 - B * (ww - w[0]*w[0]);
+            m(1,1) = 1 - B * (ww - w[1]*w[1]);
+            m(2,2) = 1 - B * (ww - w[2]*w[2]);
+
+            Scalar Bab = B*w[0]*w[1];
+            Scalar Bac = B*w[0]*w[2];
+            Scalar Bbc = B*w[1]*w[2];
+            m(0,1) = Bab - A*w[2];
+            m(1,0) = Bab + A*w[2];
+            m(0,2) = Bac + A*w[1];
+            m(2,0) = Bac - A*w[1];
+            m(1,2) = Bbc - A*w[0];
+            m(2,1) = Bbc + A*w[0];            
+        }
+    public: 
         SO3() : R(Identity()) {}
+
+        SO3(const Uninitialized& u) {}
 
         SO3(const SO3& other) : R(other.R) {}
 
@@ -125,12 +149,10 @@ namespace latl
                 A = latl::sin(theta) / theta;
                 B = (1 - latl::cos(theta)) / theta_sq;
             }
-            
-            Matrix<3,3,Scalar> wx = skew_matrix(w);
-            Matrix<3,3,Scalar> R = Identity();
-            R += A*wx;
-            R += B*(wx*wx);
-            return SO3(R);
+
+            SO3 expw((Uninitialized()));
+            compute_exp_matrix(w, A, B, expw.R);
+            return expw;
         }
 
         template <class V>
