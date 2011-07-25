@@ -65,12 +65,28 @@ namespace latl
     
     
     template <class Mat>
-    void orthonormalize(const AbstractMatrix<Mat>& m) {
+    void orthonormalize(AbstractMatrix<Mat>& m) {
         for (int i=0; i<m.rows(); ++i) {
             normalize(m[i].instance());
             for (int j=i+1; j<m.rows(); ++j)
                 m[j] -= (m[j] * m[i]) * m[i];
         }
+    }
+
+    template <class Mat>
+    Matrix<2,2,LATL_MS(Mat)> inverse(const FixedMatrix<2,2,Mat>& m)
+    {
+        typedef LATL_MS(Mat) Scalar;
+        Scalar det = m(0,0)*m(1,1) - m(0,1)*m(1,0);
+        assert(det != 0);
+
+        Scalar inv_det = 1 / det;
+        Matrix<2,2,Scalar> inv;
+        inv(0,0) = inv_det * m(1,1);
+        inv(1,1) = inv_det * m(0,0);
+        inv(0,1) = inv_det * -m(0,1);
+        inv(1,0) = inv_det * -m(1,0);
+        return inv;
     }
 
     template <class V>
