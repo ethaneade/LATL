@@ -39,7 +39,7 @@
 
 namespace latl
 {    
-    template <class Scalar>
+    template <class Scalar=double>
     class SE3 {
     private:
         Vector<3,Scalar> t;
@@ -164,8 +164,7 @@ namespace latl
     void transform_covariance(const SE3<Scalar>& trans,
                               AbstractMatrix<Mat>& m)
     {
-        assert_square(m);
-        assert_size_is<6>(m[0]);
+        assert_shape_is<6,6>(m);
 
         for (int i=0; i<6; ++i)
             m.T()[i] = trans.adjoint_times(m.T()[i]);
@@ -177,8 +176,7 @@ namespace latl
     void transform_information(const SE3<Scalar>& trans,
                                AbstractMatrix<Mat>& m)
     {
-        assert_square(m);
-        assert_size_is<6>(m[0]);
+        assert_shape_is<6,6>(m);
 
         for (int i=0; i<6; ++i)
             m.T()[i] = trans.adjoint_T_times(m.T()[i]);
