@@ -83,6 +83,15 @@ namespace latl
     {
         return append(v, (LATL_VS(V))1);
     }
+
+    template <class V>
+    Vector<2,LATL_VS(V)> perp(const FixedVector<2,V>& v)
+    {
+        Vector<2,LATL_VS(V)> pv;
+        pv[0] = -v[1];
+        pv[1] = v[0];
+        return pv;
+    }
     
 }
 
