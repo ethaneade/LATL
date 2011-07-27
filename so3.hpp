@@ -85,6 +85,11 @@ namespace latl
             orthonormalize(R);
             return SO3(R);
         }
+
+        template <class Mat>
+        static SO3 bless(const AbstractMatrix<Mat>& m) {
+            return SO3(m);
+        }
         
         void rectify() {
             orthonormalize(R);
