@@ -338,6 +338,8 @@ namespace latl
             assign(other);
             return *this;
         }
+
+        using FixedVector<N,RefVector<N,Stride,Scalar> >::operator=;
         
         int vstride() const { return Stride; }
         Scalar* vdata() { return x; }
@@ -368,6 +370,9 @@ namespace latl
             assign(other);
             return *this;
         }
+
+        using DynamicVector<RefVector<-1,Stride,Scalar> >::operator=;
+        
         
         int vsize() const { return N; }
         int vstride() const { return Stride; }
@@ -401,6 +406,8 @@ namespace latl
             return *this;
         }
 
+        using FixedVector<N,RefVector<N,-1,Scalar> >::operator=;
+
         int vstride() const { return Stride; }
         Scalar* vdata() { return x; }
         const Scalar* vdata() const { return x; }        
@@ -431,6 +438,8 @@ namespace latl
             assign(other);
             return *this;
         }
+
+        using DynamicVector<RefVector<-1,-1,Scalar> >::operator=;
         
         int vsize() const { return N; }
         int vstride() const { return Stride; }
