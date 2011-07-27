@@ -64,18 +64,34 @@ namespace latl {
 
     
     struct Random : public VectorExpr<Random>, public MatrixExpr<Random> {
-        double scale;
-        Random(double s = 1) : scale(s) {}
+        double factor;
+        Random(double s = 1) : factor(s/RAND_MAX) {}
         template <class V>
         void operator()(AbstractVector<V>& v) const {
             for (int i=0; i<v.size(); ++i)
-                v[i] = rand() * scale / RAND_MAX;
+                v[i] = rand() * factor;
         }
         template <class M>
         void operator()(AbstractMatrix<M>& m) const {
             for (int i=0; i<m.rows(); ++i)
                 for (int j=0; j<m.cols(); ++j)
-                    m(i,j) = rand() * scale / RAND_MAX;
+                    m(i,j) = rand() * factor;
+        }
+    };
+
+    struct CenteredRandom : public VectorExpr<CenteredRandom>, public MatrixExpr<CenteredRandom> {
+        double a, b;
+        CenteredRandom(double s = 1) : a(s / RAND_MAX), b(s*0.5) {}
+        template <class V>
+        void operator()(AbstractVector<V>& v) const {
+            for (int i=0; i<v.size(); ++i)
+                v[i] = rand() * a - b;
+        }
+        template <class M>
+        void operator()(AbstractMatrix<M>& m) const {
+            for (int i=0; i<m.rows(); ++i)
+                for (int j=0; j<m.cols(); ++j)
+                    m(i,j) = rand() * a - b;
         }
     };
     
