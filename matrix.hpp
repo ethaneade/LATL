@@ -55,7 +55,7 @@ namespace latl
     }
 
     template <int M, int N, class A>
-    void assert_static_shape(const AbstractMatrix<A>& a) {
+    void assert_shape_is(const AbstractMatrix<A>& a) {
         CheckEquality<matrix_traits<A>::static_rows,M>::eval(a.rows(), M);
         CheckEquality<matrix_traits<A>::static_cols,N>::eval(a.cols(), N);
     }
