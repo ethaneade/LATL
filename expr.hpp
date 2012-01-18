@@ -95,7 +95,7 @@ namespace latl {
         }
     };
     
-    struct Identity : public MatrixExpr<Identity> {
+    struct Identity : public MatrixExpr<Identity> {        
         template <class M>
         void operator()(AbstractMatrix<M>& m) const {
             assert_square(m);

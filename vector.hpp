@@ -109,6 +109,11 @@ namespace latl
             unchecked_assign(other);
         }
 
+        V& operator=(const AbstractVector& w) {
+            assign(w);
+            return instance();
+        }
+        
         template <class W>
         V& operator=(const AbstractVector<W>& w) {
             assign(w);
@@ -267,13 +272,13 @@ namespace latl
         template <int NV, class V>
         Vector(const FixedVector<NV,V>& v) {
             init(NV);
-            *this = v;
+            assign(v);
         }
 
         template <class V>
         Vector(const DynamicVector<V>& v) {
             init(v.size());
-            *this = v;
+            assign(v);
         }        
 
         template <class E>

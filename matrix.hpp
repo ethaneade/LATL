@@ -142,6 +142,19 @@ namespace latl
             unchecked_assign(other);
         }
 
+        template <class T>
+        AbstractMatrix& operator=(const AbstractMatrix<T>& m)
+        {
+            assign(m);
+            return *this;
+        }
+
+        AbstractMatrix& operator=(const AbstractMatrix& m)
+        {
+            assign(m);
+            return *this;
+        }
+        
         template <class E>
         Mat& operator=(const MatrixExpr<E>& e) {
             e.instance()(this->instance());
@@ -627,6 +640,7 @@ namespace latl
         typedef typename traits::col_t col_t;
         typedef typename traits::transpose_t transpose_t;
 
+        ~Matrix() { delete[] x; }
         Matrix() { M = 0; x = 0; }
         Matrix(int m) { init(m); }        
         Matrix(int m, Scalar s) {
@@ -708,6 +722,7 @@ namespace latl
         typedef typename traits::col_t col_t;
         typedef typename traits::transpose_t transpose_t;
 
+        ~Matrix() { delete[] x; }
         Matrix() { N = 0; x = 0; }
         Matrix(int n) { init(n); }        
         Matrix(int n, Scalar s) {
@@ -789,6 +804,7 @@ namespace latl
         typedef typename traits::col_t col_t;
         typedef typename traits::transpose_t transpose_t;
 
+        ~Matrix() { delete[] x; }
         Matrix() { M = N = 0; x = 0; }
         Matrix(int m, int n) { init(m, n); }        
         Matrix(int m, int n, Scalar s) {

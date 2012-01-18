@@ -62,6 +62,9 @@ namespace latl
         }
         
     public:
+        typedef Scalar scalar_type;
+        enum {DoF = 6};
+        
         SE3() : t(Zeros()) {}
 
         SE3(const Uninitialized& u) {}
@@ -144,6 +147,16 @@ namespace latl
             return exp_uw;
         }
 
+        template <class Mat>
+        void adjoint(AbstractMatrix<Mat>& adj) const
+        {
+            assert_shape_is<6,6>(adj);
+            slice<0,0,3,3>(adj) = R.matrix();
+            slice<3,3,3,3>(adj) = R.matrix();
+            slice<0,3,3,3>(adj) = skew_matrix(t) * R.matrix();
+            zero(slice<3,0,3,3>(adj).instance());
+        }
+        
         template <class V>
         Vector<6,Scalar> adjoint_times(const AbstractVector<V>& v) const {
             assert_size_is<6>(v);
@@ -154,36 +167,11 @@ namespace latl
         template <class V>
         Vector<6,Scalar> adjoint_T_times(const AbstractVector<V>& v) const {
             assert_size_is<6>(v);
-            Vector<3,Scalar> RTu = R.T() * slice<0,3>(v);            
-            return (R.T() * slice<0,3>(v),
-                    R.T() * (slice<3,3>(v) - t ^ slice<0,3>(v)));         
+            Vector<3,Scalar> RTu = R.matrix().T() * slice<0,3>(v);            
+            return (RTu,
+                    R.matrix().T() * (slice<3,3>(v) - (t ^ slice<0,3>(v))));       
         }
-    };
-
-    template <class Scalar, class Mat>
-    void transform_covariance(const SE3<Scalar>& trans,
-                              AbstractMatrix<Mat>& m)
-    {
-        assert_shape_is<6,6>(m);
-
-        for (int i=0; i<6; ++i)
-            m.T()[i] = trans.adjoint_times(m.T()[i]);
-        for (int i=0; i<6; ++i)
-            m[i] = trans.adjoint_times(m[i]);
-    }
-
-    template <class Scalar, class Mat>
-    void transform_information(const SE3<Scalar>& trans,
-                               AbstractMatrix<Mat>& m)
-    {
-        assert_shape_is<6,6>(m);
-
-        for (int i=0; i<6; ++i)
-            m.T()[i] = trans.adjoint_T_times(m.T()[i]);
-        for (int i=0; i<6; ++i)
-            m[i] = trans.adjoint_T_times(m[i]);
-    }
-    
+    };    
 }
 
 #endif

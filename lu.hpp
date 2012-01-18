@@ -109,26 +109,61 @@ namespace latl
             r = row;
         }
 
-        template <class V>
-        typename VectorHolder<N,Scalar>::type
-        inverse_times(const AbstractVector<V>& v) const {
+        template <class V1, class V2>
+        void inverse_times(const AbstractVector<V1>& v, AbstractVector<V2>& x) const
+        {
             assert_same_size(index(), v);
+            assert_same_size(v, x);
             const int n = index().size();
-            VectorHolder<N,Scalar> y(n);
+            
             for (int i=0; i<n; ++i) {
                 Scalar yi = v[index()[i]];
                 for (int j=0; j<i; ++j)
-                    yi -= lu.value(i, j) * y()[j];                    
-                y()[i] = yi;
+                    yi -= lu.value(i, j) * x[j];                    
+                x[i] = yi;
             }
             for (int i=n-1; i>=0; --i) {
-                Scalar yi = y()[i];
+                Scalar yi = x[i];
                 for (int j=i+1; j<n; ++j)
-                    yi -= lu.value(i,j) * y()[j];
-                y()[i] = inv_diag()[i] * yi;
+                    yi -= lu.value(i,j) * x[j];
+                x[i] = inv_diag()[i] * yi;
             }
+        }
+        
+        template <class V>
+        typename VectorHolder<N,Scalar>::type
+        inverse_times(const AbstractVector<V>& v) const
+        {
+            assert_same_size(index(), v);
+            const int n = index().size();
+            VectorHolder<N,Scalar> y(n);
+            inverse_times(v, y());
             return y.value;
         }
+
+        template <class Mat1, class Mat2>
+        void inverse_times(const AbstractMatrix<Mat1>& v, AbstractMatrix<Mat2>& x) const
+        {
+            assert_same_size(index(), v.T()[0]);
+            assert_same_shape(v, x);
+            
+            for (int i=0; i<index().size(); ++i)
+                inverse_times(v.T()[i], x.T()[i].instance());
+        }
+        
+        template <class Mat>
+        void get_inverse(AbstractMatrix<Mat>& m) const
+        {
+            assert_same_shape(lu(), m);
+            const int n = index().size();
+            VectorHolder<N,Scalar> v(n);
+            v() = Zeros();
+            for (int i=0; i<n; ++i) {
+                v()[i] =  1;
+                inverse_times(v(), m.T()[i].instance());
+                v()[i] = 0;
+            }
+        }        
 
         int rank() const { return r; }
 

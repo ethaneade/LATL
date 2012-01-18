@@ -39,9 +39,34 @@
 
 namespace latl
 {
+    template <class S> Vector<1,typename ScalarType<S>::type>
+    makeVector(S s0) {
+        S s[] = { s0 };
+        return Vector<1,typename ScalarType<S>::type>(s);
+    }
+
+    template <class S> Vector<2,typename ScalarType<S>::type>
+    makeVector(S s0, S s1) {
+        S s[] = { s0, s1 };
+        return Vector<2,typename ScalarType<S>::type>(s);
+    }
+    
+    template <class V>
+    void zero(AbstractVector<V>& v) {
+        fill(v, 0);
+    }
+    
     template <class V>
     LATL_VS(V) norm_sq(const AbstractVector<V>& v) { return v*v; }
 
+    template <class V>
+    LATL_VS(V) max_norm(const AbstractVector<V>& v) {
+        LATL_VS(V) mn = 0;
+        for (int i=0; i<v.size(); ++i)
+            mn = latl::max(mn, latl::abs(v[i]));
+        return mn;
+    }
+    
     template <class V>
     typename Wider<float,LATL_VS(V)>::type
     norm(const AbstractVector<V>& v)
@@ -92,6 +117,8 @@ namespace latl
         pv[1] = v[0];
         return pv;
     }
+
+    
     
 }
 

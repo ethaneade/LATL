@@ -34,7 +34,7 @@
 #ifndef LATL_LDLT_HPP
 #define LATL_LDLT_HPP
 
-#include <latl/ldlt.hpp>
+#include <latl/latl.hpp>
 
 namespace latl
 {

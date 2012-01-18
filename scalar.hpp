@@ -107,24 +107,34 @@ namespace latl
     struct ScalarFuncs<float> {
         static float abs(float s) { return fabsf(s); }
         static float sqrt(float s) { return sqrtf(s); }
+        static float cbrt(float s) { return cbrtf(s); }
         static float sin(float s) { return sinf(s); }
+        static float asin(float s) { return asinf(s); }
         static float cos(float s) { return cosf(s); }
         static float acos(float s) { return acosf(s); }
         static float tan(float s) { return tanf(s); }
         static float atan(float s) { return atanf(s); }
         static float atan2(float y, float x) { return atan2f(y,x); }
+        static float exp(float s) { return expf(s); }
+        static float ln(float s) { return logf(s); }
+        static float pow(float x, float y) { return powf(x, y); }
     };
         
     template <>
     struct ScalarFuncs<double> {
         static double abs(double s) { return ::fabs(s); }
         static double sqrt(double s) { return ::sqrt(s); }
+        static double cbrt(double s) { return ::cbrt(s); }
         static double sin(double s) { return ::sin(s); }
+        static double asin(double s) { return ::asin(s); }
         static double cos(double s) { return ::cos(s); }
         static double acos(double s) { return ::acos(s); }
         static double tan(double s) { return ::tan(s); }
         static double atan(double s) { return ::atan(s); }
         static double atan2(double y, double x) { return ::atan2(y,x); }
+        static double exp(double s) { return ::exp(s); }
+        static double ln(double s) { return ::log(s); }
+        static double pow(double x, double y) { return ::pow(x, y); }
     };
 
     template <class T> typename ScalarType<T>::type
@@ -134,7 +144,13 @@ namespace latl
     sqrt(T x) { return ScalarFuncs<T>::sqrt(x); }
 
     template <class T> typename ScalarType<T>::type
+    cbrt(T x) { return ScalarFuncs<T>::cbrt(x); }
+    
+    template <class T> typename ScalarType<T>::type
     sin(T x) { return ScalarFuncs<T>::sin(x); }
+
+    template <class T> typename ScalarType<T>::type
+    asin(T x) { return ScalarFuncs<T>::asin(x); }
 
     template <class T> typename ScalarType<T>::type
     cos(T x) { return ScalarFuncs<T>::cos(x); }
@@ -151,6 +167,15 @@ namespace latl
     template <class T> typename ScalarType<T>::type
     atan2(T y, T x) { return ScalarFuncs<T>::atan2(y, x); }
 
+    template <class T> typename ScalarType<T>::type
+    exp(T x) { return ScalarFuncs<T>::exp(x); }
+
+    template <class T> typename ScalarType<T>::type
+    ln(T x) { return ScalarFuncs<T>::ln(x); }
+
+    template <class T> typename ScalarType<T>::type
+    pow(T x, T y) { return ScalarFuncs<T>::pow(x, y); }
+    
     template <class T> typename ScalarType<T>::type
     sq(T x) { return x*x; }
 

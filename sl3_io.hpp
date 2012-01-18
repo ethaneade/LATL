@@ -31,50 +31,28 @@
 // interpreted as representing official policies, either expressed or
 // implied, of Ethan Eade.
 
-#ifndef LATL_IO_HPP
-#define LATL_IO_HPP
+#ifndef LATL_SL3_IO_HPP
+#define LATL_SL3_IO_HPP
 
-#include <latl/matrix.hpp>
-#include <iostream>
+#include <latl/sl3.hpp>
+#include <latl/io.hpp>
 
-namespace latl {
-
-    template <class V>
-    std::istream& operator>>(std::istream& in, AbstractVector<V>& v)
+namespace latl
+{
+    template <class Scalar>
+    std::ostream& operator<<(std::ostream& out, const SL3<Scalar>& sl3)
     {
-        for (int i=0; i<v.size(); ++i) {
-            in >> v[i];
-        }
+        return (out << sl3.matrix());
+    }
+
+    template <class Scalar>
+    std::istream& operator>>(std::istream& in, SL3<Scalar>& sl3)
+    {
+        Matrix<3,3,Scalar> H;
+        if (in >> H)
+            sl3 = SL3<Scalar>::from_matrix(H);
         return in;
-    }
-
-    template <class Mat>
-    std::istream& operator>>(std::istream& in, AbstractMatrix<Mat>& m)
-    {
-        for (int i=0; i<m.rows(); ++i)
-            in >> m[i];
-        return in;
-    }
-
-    template <class V>
-    std::ostream& operator<<(std::ostream& out, const AbstractVector<V>& v)
-    {
-        int w = out.precision() + 7;
-        for (int i=0; i<v.size(); ++i) {
-            out.width(w);
-            out << v[i];
-        }
-        return out;
-    }
-
-    template <class Mat>
-    std::ostream& operator<<(std::ostream& out, const AbstractMatrix<Mat>& m)
-    {
-        for (int i=0; i<m.rows(); ++i)
-            out << m[i] << std::endl;
-        return out;
-    }
-    
+    }    
 }
 
 #endif

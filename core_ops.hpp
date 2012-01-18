@@ -31,49 +31,49 @@
 // interpreted as representing official policies, either expressed or
 // implied, of Ethan Eade.
 
-#ifndef LATL_IO_HPP
-#define LATL_IO_HPP
+#ifndef LATL_CORE_OPS_HPP
+#define LATL_CORE_OPS_HPP
 
+#include <latl/scalar.hpp>
+#include <latl/vector.hpp>
 #include <latl/matrix.hpp>
-#include <iostream>
 
-namespace latl {
-
-    template <class V>
-    std::istream& operator>>(std::istream& in, AbstractVector<V>& v)
+namespace latl
+{
+    template <class V1, class StoreOp, class V2>
+    void store(const AbstractVector<V1>& in,
+               const StoreOp& op,
+               AbstractVector<V3>& out)
     {
-        for (int i=0; i<v.size(); ++i) {
-            in >> v[i];
-        }
-        return in;
+        assert_same_size(in, out);
+        for (int i=0; i<a.size(); ++i)
+            op(out[i], in[i]);
     }
 
-    template <class Mat>
-    std::istream& operator>>(std::istream& in, AbstractMatrix<Mat>& m)
+
+    template <class V1, class Scalar, class StoreOp, class V2>
+    void scale_store(const AbstractVector<V1>& in, Scalar s,
+                     const StoreOp& op,
+                     AbstractVector<V2>& out)
     {
-        for (int i=0; i<m.rows(); ++i)
-            in >> m[i];
-        return in;
+        assert_same_size(in, out);
+        for (int i=0; i<in.size(); ++i)
+            op(out[i], in[i] * s);
     }
 
-    template <class V>
-    std::ostream& operator<<(std::ostream& out, const AbstractVector<V>& v)
+    template <class V1, class V2, class Scalar, class StoreOp, class V3>
+    void scale_add_store(const AbstractVector<V1>& a, Scalar s,
+                         const AbstractVector<V2>& b,
+                         const StoreOp& op,
+                         AbstractVector<V3>& out)
     {
-        int w = out.precision() + 7;
-        for (int i=0; i<v.size(); ++i) {
-            out.width(w);
-            out << v[i];
-        }
-        return out;
+        assert_same_size(a, b);
+        assert_same_size(a, out);
+        for (int i=0; i<a.size(); ++i)
+            op(out[i], a[i] * s + b[i]);
     }
-
-    template <class Mat>
-    std::ostream& operator<<(std::ostream& out, const AbstractMatrix<Mat>& m)
-    {
-        for (int i=0; i<m.rows(); ++i)
-            out << m[i] << std::endl;
-        return out;
-    }
+    
+    
     
 }
 

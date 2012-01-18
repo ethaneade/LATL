@@ -31,50 +31,31 @@
 // interpreted as representing official policies, either expressed or
 // implied, of Ethan Eade.
 
-#ifndef LATL_IO_HPP
-#define LATL_IO_HPP
+#ifndef LATL_SE2_IO_HPP
+#define LATL_SE2_IO_HPP
 
-#include <latl/matrix.hpp>
-#include <iostream>
+#include <latl/se2.hpp>
+#include <latl/io.hpp>
 
-namespace latl {
-
-    template <class V>
-    std::istream& operator>>(std::istream& in, AbstractVector<V>& v)
+namespace latl
+{
+    template <class Scalar>
+    std::ostream& operator<<(std::ostream& out, const SE2<Scalar>& se2)
     {
-        for (int i=0; i<v.size(); ++i) {
-            in >> v[i];
-        }
-        return in;
-    }
-
-    template <class Mat>
-    std::istream& operator>>(std::istream& in, AbstractMatrix<Mat>& m)
-    {
-        for (int i=0; i<m.rows(); ++i)
-            in >> m[i];
-        return in;
-    }
-
-    template <class V>
-    std::ostream& operator<<(std::ostream& out, const AbstractVector<V>& v)
-    {
-        int w = out.precision() + 7;
-        for (int i=0; i<v.size(); ++i) {
-            out.width(w);
-            out << v[i];
-        }
+        for (int i=0; i<2; ++i)
+            out << se2.rotation().matrix()[i]
+                << Vector<1,Scalar>(se2.translation()[i]) << std::endl;
         return out;
     }
 
-    template <class Mat>
-    std::ostream& operator<<(std::ostream& out, const AbstractMatrix<Mat>& m)
+    template <class Scalar>
+    std::istream& operator>>(std::istream& in, SE2<Scalar>& se2)
     {
-        for (int i=0; i<m.rows(); ++i)
-            out << m[i] << std::endl;
-        return out;
-    }
-    
+        Matrix<2,3,Scalar> Rt;
+        if (in >> Rt)
+            se2 = SE2<Scalar>(Rt.T()[2], SO2<Scalar>::from_matrix(slice<0,0,2,2>(Rt)));
+        return in;
+    }    
 }
 
 #endif
