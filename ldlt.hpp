@@ -106,7 +106,15 @@ namespace latl
             }
             return y();
         }
-
+ 
+        template <class Mat1, class Mat2>
+        void inverse_times(const AbstractMatrix<Mat1>& m, AbstractMatrix<Mat2> &inv_times_m) const {
+            assert_same_size(inv_diag(), m.T()[0]);
+            assert_same_shape(m, inv_times_m);
+            for (int i=0; i<m.cols(); ++i)
+                inv_times_m.T()[i] = inverse_times(m.T()[i]);
+        }
+       
         bool is_full_rank() const { return full_rank; }
         
         Scalar determinant() const {
