@@ -202,18 +202,18 @@ namespace latl
             for (int i=0; i<N; ++i)
                 x[i] = s[i];
         }
-        
+
         Vector(Scalar s) {
             fill(*this, s);
         }
 
         Vector(const Vector& v) {
-            assign(v);
+            this->assign(v);
         }
         
         template <class V>
         Vector(const AbstractVector<V>& v) {
-            assign(v);
+            this->assign(v);
         }
 
         template <class E>
@@ -229,13 +229,13 @@ namespace latl
         Scalar& at(int i) { return x[i]; }
 
         Vector& operator=(const Vector& v) {
-            assign(v);
+            this->assign(v);
             return *this;
         }
 
         template <class V>
         Vector& operator=(const AbstractVector<V>& v) {
-            assign(v);
+            this->assign(v);
             return *this;
         }
     };
@@ -266,19 +266,19 @@ namespace latl
         
         Vector(const Vector& v) {
             init(v.size());
-            assign(v);
+            this->assign(v);
         }
 
         template <int NV, class V>
         Vector(const FixedVector<NV,V>& v) {
             init(NV);
-            assign(v);
+            this->assign(v);
         }
 
         template <class V>
         Vector(const DynamicVector<V>& v) {
             init(v.size());
-            assign(v);
+            this->assign(v);
         }        
 
         template <class E>
@@ -294,7 +294,7 @@ namespace latl
         using DynamicVector<Vector<-1,Scalar> >::operator=;
 
         Vector& operator=(const Vector& v) {
-            assign(v);
+            this->assign(v);
             return *this;
         }
         
@@ -334,13 +334,13 @@ namespace latl
         RefVector(Scalar *s) : x(s) {}
 
         RefVector& operator=(const RefVector& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
         template <class W>
         RefVector& operator=(const AbstractVector<W>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
@@ -367,12 +367,12 @@ namespace latl
         RefVector(Scalar *s, int n) : x(s), N(n) {}        
         template <class W>
         RefVector& operator=(const AbstractVector<W>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
         RefVector& operator=(const RefVector& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
@@ -402,12 +402,12 @@ namespace latl
         
         template <class W>        
         RefVector& operator=(const AbstractVector<W>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
         RefVector& operator=(const RefVector& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
@@ -435,12 +435,12 @@ namespace latl
 
         template <class W>
         RefVector& operator=(const AbstractVector<W>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
         RefVector& operator=(const RefVector& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 

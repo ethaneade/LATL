@@ -259,7 +259,7 @@ namespace latl
 
         template <class T>
         self_t& operator=(const AbstractMatrix<T>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
         
@@ -291,12 +291,12 @@ namespace latl
                                                                         \
         RefMatrix(Scalar *x_) : x(x_) {}                                \
         RefMatrix& operator=(const RefMatrix& other) {                  \
-            assign(other);                                              \
+            this->assign(other);                                              \
             return *this;                                               \
         }                                                               \
         template <class T>                                              \
         RefMatrix& operator=(const AbstractMatrix<T>& other) {          \
-            assign(other);                                              \
+            this->assign(other);                                              \
             return *this;                                               \
         }                                                               \
         Scalar* mdata() { return x; }                                   \
@@ -574,7 +574,7 @@ namespace latl
 
         template <class T>
         Matrix(const AbstractMatrix<T>& other) {
-            assign(other);
+            this->assign(other);
         }
 
         Matrix(const Matrix& other) {
@@ -587,13 +587,13 @@ namespace latl
         }
 
         Matrix& operator=(const Matrix& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
         template <class T>
         Matrix& operator=(const AbstractMatrix<T>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
         
@@ -661,12 +661,12 @@ namespace latl
         template <class T>
         Matrix(const AbstractMatrix<T>& other) {
             init(other.rows());
-            assign(other);
+            this->assign(other);
         }
         
         Matrix(const Matrix& other) {
             init(other.rows());
-            assign(other);
+            this->assign(other);
         }
 
         template <class E>
@@ -675,11 +675,11 @@ namespace latl
             e.instance()(*this);
         }        
 
-        Matrix& operator=(const Matrix& other) { assign(other); return *this; }
+        Matrix& operator=(const Matrix& other) { this->assign(other); return *this; }
         
         template <class T>
         Matrix& operator=(const AbstractMatrix<T>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
         
@@ -743,7 +743,7 @@ namespace latl
         template <class T>
         Matrix(const AbstractMatrix<T>& other) {
             init(other.cols());
-            assign(other);
+            this->assign(other);
         }
         
         Matrix(const Matrix& other) {
@@ -757,10 +757,10 @@ namespace latl
             e.instance()(*this);
         }        
         
-        Matrix& operator=(const Matrix& other) { assign(other); return *this; }
+        Matrix& operator=(const Matrix& other) { this->assign(other); return *this; }
         template <class T>
         Matrix& operator=(const AbstractMatrix<T>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
@@ -826,11 +826,11 @@ namespace latl
         template <class T>
         Matrix(const AbstractMatrix<T>& other) {
             init(other.rows(), other.cols());
-            assign(other);
+            this->assign(other);
         }
         Matrix(const Matrix& other) {
             init(other.rows(), other.cols());
-            assign(other);
+            this->assign(other);
         }
 
         template <class E>
@@ -839,10 +839,10 @@ namespace latl
             e.instance()(*this);
         }        
         
-        Matrix& operator=(const Matrix& other) { assign(other); return *this; }
+        Matrix& operator=(const Matrix& other) { this->assign(other); return *this; }
         template <class T>
         Matrix& operator=(const AbstractMatrix<T>& other) {
-            assign(other);
+            this->assign(other);
             return *this;
         }
 
