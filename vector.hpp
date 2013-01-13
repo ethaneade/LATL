@@ -100,7 +100,7 @@ namespace latl
 	int stride() const { return instance().vstride(); }
         
         scalar_t* data() { return instance().vdata(); }
-        const scalar_t* data() const { return instance.vdata(); }
+        const scalar_t* data() const { return instance().vdata(); }
 
         template <class W>
         void assign(const AbstractVector<W>& other)
@@ -455,6 +455,20 @@ namespace latl
         scalar_t at(int i) const { return x[i*Stride]; }
         scalar_t& at(int i) { return x[i*Stride]; }
     };
+
+
+
+    template <int N, typename S>
+    const RefVector<N,1,const S> asVector(const S* x)
+    {
+        return RefVector<N,1,const S>(x);
+    }
+
+    template <int N, typename S>
+    RefVector<N,1,S> asVector(S* x)
+    {
+        return RefVector<N,1,S>(x);
+    }
     
     //
     // Bounds checking for slices:

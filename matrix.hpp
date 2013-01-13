@@ -554,6 +554,19 @@ namespace latl
 
 #undef LATL_REFM_COMMON
 
+
+    template <int M, int N, typename S>
+    const RefMatrix<M,N,N,1,const S> asMatrix(const S* x)
+    {
+        return RefMatrix<M,N,N,1,const S>(x);
+    }
+
+    template <int M, int N, typename S>
+    RefMatrix<M,N,N,1,S> asMatrix(S* x)
+    {
+        return RefMatrix<M,N,N,1,S>(x);
+    }
+    
     template <int M, int N, class Scalar>
     class Matrix : public FixedMatrix<M,N,Matrix<M,N,Scalar> >
     {
