@@ -68,6 +68,18 @@ namespace latl
     template <class A>
     struct Wider<A,A> { typedef A type; };
 
+    template <class A>
+    struct Wider<const A, const A> { typedef const A type; };
+    
+    template <class A, class B>
+    struct Wider<const A, B> { typedef typename Wider<A,B>::type type; };
+
+    template <class A, class B>
+    struct Wider<A, const B> { typedef typename Wider<A,B>::type type; };
+
+    template <class A, class B>
+    struct Wider<const A, const B> { typedef typename Wider<A,B>::type type; };
+    
     template <> struct Wider<int,float> { typedef float type; };
     template <> struct Wider<int,double> { typedef double type; };
         

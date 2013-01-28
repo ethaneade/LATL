@@ -57,6 +57,17 @@ namespace latl
             }
         }
     }
+
+    template <class Mat>
+    void symmetrize_from_upper(AbstractMatrix<Mat>& m)
+    {
+        assert_square(m);
+        for (int i=0; i<m.rows(); ++i) {
+            for (int j=0; j<i; ++j) {
+                m(i,j) = m(j,i);
+            }
+        }
+    }
     
     template <class Mat>
     LATL_MS(Mat) trace(const AbstractMatrix<Mat>& m)

@@ -117,6 +117,14 @@ namespace latl
        
         bool is_full_rank() const { return full_rank; }
         
+        bool is_positive_definite() const {
+            for (int i=1; i<L().rows(); ++i)
+                if (L()(i,i) < Scalar(0))
+                    return false;
+            return true;
+            
+        }
+        
         Scalar determinant() const {
             if (!is_full_rank())
                 return 0;
