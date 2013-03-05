@@ -121,8 +121,7 @@ namespace latl
             for (int i=1; i<L().rows(); ++i)
                 if (L()(i,i) < Scalar(0))
                     return false;
-            return true;
-            
+            return true;            
         }
         
         Scalar determinant() const {
@@ -132,6 +131,16 @@ namespace latl
             for (int i=1; i<L().rows(); ++i)
                 det *= L()(i,i);
             return det;
+        }
+
+        template <class Mat>
+        void get_inverse(AbstractMatrix<Mat> &minv) const
+        {
+            assert_same_shape(L(), minv);
+            const int n = L().rows();
+            MatrixHolder<N,N,Scalar> eye(n,n);
+            eye() = Identity();
+            inverse_times(eye(), minv);
         }
 
         template <class Mat>
