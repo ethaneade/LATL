@@ -125,7 +125,7 @@ namespace latl
         typename Constify<transpose_t>::type T() const { return instance().transpose(); }
         
         scalar_t* data() { return instance().mdata(); }
-        const scalar_t* data() const { return instance.mdata(); }
+        const scalar_t* data() const { return instance().mdata(); }
 
         scalar_t* data_at(int i, int j) {
             return data() + row_stride()*i + col_stride()*j;
