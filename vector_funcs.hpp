@@ -50,6 +50,12 @@ namespace latl
         S s[] = { s0, s1 };
         return Vector<2,typename ScalarType<S>::type>(s);
     }
+
+    template <class S> Vector<3,typename ScalarType<S>::type>
+    makeVector(S s0, S s1, S s2) {
+        S s[] = { s0, s1, s2 };
+        return Vector<3,typename ScalarType<S>::type>(s);
+    }
     
     template <class V>
     void zero(AbstractVector<V>& v) {
